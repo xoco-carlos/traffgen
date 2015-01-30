@@ -78,22 +78,22 @@ struct argp_option options[] ={
  * These arguments define the variables that you can use the program from the command line.
  */
 struct arguments{
-	char ip_ver;				/**< IP Version*/
-	char protocol;				/**< Protocol to send*/
-	char *argz;					/**< All arguments*/
+	char ip_ver;			/**< IP Version*/
+	char protocol;			/**< Protocol to send*/
+	char *argz;			/**< All arguments*/
 	unsigned long daddr;		/**< Destination ip*/
 	unsigned long saddr;		/**< Source ip*/
-	char *payload;				/**< Payload packet*/
-	size_t argz_len;			/**< # of args*/
+	char *payload;			/**< Payload packet*/
+	size_t argz_len;		/**< # of args*/
 	int syn,ack,fin,psh,rst,urg;/**< TCP Flags*/
 	int verbose,fast,flood;		/**< Boolean options*/
 	unsigned int sport,dport;	/**< Port number*/
-	unsigned int count;			/**< Number of packets to send*/
+	unsigned int count;		/**< Number of packets to send*/
 	int proto,port,tcpf;		/**< Control flags*/
 	struct in6_addr saddr6;		/**< Struct for source inet address IPv6*/
 	struct in6_addr daddr6;		/**< Struct for destination inet address IPv6*/
 	char *sa,*da;				
-	int delay;					/**< Delay */
+	int delay;			/**< Delay */
 };
 /**
  * @brief Function to validate arguments
@@ -204,7 +204,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		break;
 		case ARGP_KEY_END:{
 			size_t count = argz_count (a->argz, a->argz_len);
-			if (count > 1){				/**< Check only one argument*/
+			if (count > 1){			/**< Check only one argument*/
 				argp_usage(state);
 				argp_failure (state, 1, 0, "too many arguments");
 			}
@@ -322,11 +322,11 @@ int main(int argc, char **argv){
 	}
 	else{
 		servaddr6.sin6_family	= AF_INET6;
-		servaddr6.sin6_addr		= a.daddr6;
-		servaddr6.sin6_port		= 0;
+		servaddr6.sin6_addr	= a.daddr6;
+		servaddr6.sin6_port	= 0;
 		servaddr6.sin6_flowinfo	= 0;
 		servaddr6.sin6_scope_id	= 0;
-		header_length			= sizeof(struct ip6_hdr);
+		header_length		= sizeof(struct ip6_hdr);
 		sockfd = socket (AF_INET6, SOCK_RAW, IPPROTO_RAW);
 	}
 	/*Socket error*/

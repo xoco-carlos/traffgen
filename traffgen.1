@@ -1,0 +1,83 @@
+.\" Manpage for traffgen.
+.\" Contact stovar@seguridad.unam.mx and xzamora@seguridad.unam.mx
+.TH traffgen 1 "10 Oct 2014" "1.0" "traffgen man page"
+.SH NAME
+traffgen \- Network traffic generator for stress testing
+.SH SYNOPSIS
+traffgen [OPTIONS] IP_SRC IP_DST
+.br
+Try 'traffgen --help' or `traffgen --usage' for more information.
+.P
+.B "traffgen [-4|-6] [--tcp|--udp|--icmp]"
+.SH DESCRIPTION
+traffgen is high level program for network traffic generator for stress testing. On Debian, administrators should usually use traffgen(1) instead.
+.SH OPTIONS
+IP Version
+.br
+	\-4  \-\-ip4		IPv4 Packet
+.br
+	\-6  \-\-ip6 		IPv6 Packet
+.P
+TCP
+.br
+	--tcp			TCP Packet
+.br
+The following options could be grouped together after --tcp flag
+.br
+	  -A			Set ACKNOWLEDGE Flag
+.br
+	  -F			Set FIN Flag
+.br
+	  -P			Set PUSH Flag
+.br
+	  -R			Set RESET Flag
+.br
+	  -S			Set SYNCHRONIZATION Flag
+.br
+	  -U			Set URGENT Flag
+.P
+UDP
+.br
+	--udp			UDP Packet
+.P
+ICMP
+.br
+	--icmp			ICMP Packet
+.P
+Customize your packets
+.br
+	-p  --payload=STR	Include a message in the payload
+.br
+	-s  --saddr=IP		Set a fake source IP address
+.br
+	-x  --sport=NUM		Source port
+.br
+	-y  --dport=NUM		Destination port
+.P
+Number of packets
+.br
+	-c  --count=NUM		Sen NUM packets, one packet per second
+.br
+	--fast			Send 100 packets per second
+.br
+	--flood			Send many packets as possible
+.P
+Miscelaneous
+.br
+	-?  --help		Give this help list
+.br
+	--usage			Give a short usage message
+.br
+	-v  --verbose		Produce verbose output
+.br
+	-V  --version		Print program version
+
+.SH SEE ALSO
+traffgen(1)
+.SH BUGS
+No known bugs.
+.URL "https://github.com/stovarbec/traffgen" traffgenlink trailer
+.SH AUTHOR
+Sergio Anduin Tovar Balderas (stovar@seguridad.unam.mx)
+.br
+Xocoyotzin Carlos Zamora Parra (xzamora@seguridad.unam.mx)

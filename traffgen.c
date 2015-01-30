@@ -5,16 +5,11 @@
  * @date 17 Octubre 2014
  * @brief Network traffic generator for stress testing
  *
- * Here typically goes a more extensive explanation of what the header
- * defines. Doxygens tags are words preceeded by either a backslash @\
- * or by an at symbol @@.
  * @see Coding Style and Doxygen Documentation - https://www.cs.cmu.edu/~410/doc/doxygen.html
  * @see www.seguridad.unam.mx
  * @see tic.unam.mx
  * @see www.unam.mx
  */
-#ifndef _BOX_PROTOTYPES_DOXYGEN_H
-#  define _BOX_PROTOTYPES_DOXYGEN_H
 
 #include <argp.h>
 #include <argz.h>
@@ -455,7 +450,7 @@ int main(int argc, char **argv){
 				break;
 			}
 		}
-		icmp->un.echo.sequence = ++sent;
+		/*icmp->un.echo.sequence = ++sent;*/++sent;
 		a.count--;
 		printf("%d packets sent\r", sent);
 		fflush(stdout);
@@ -503,5 +498,3 @@ unsigned short in_cksum(unsigned short *ptr, int nbytes)
 
 	return (answer);
 }
-
-#endif /* _BOX_PROTOTYPES_DOXYGEN_H */

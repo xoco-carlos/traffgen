@@ -5,7 +5,6 @@
  * @date 17 Octubre 2014
  * @brief Network traffic generator for stress testing
  *
- * @see Coding Style and Doxygen Documentation - https://www.cs.cmu.edu/~410/doc/doxygen.html
  * @see www.seguridad.unam.mx
  * @see tic.unam.mx
  * @see www.unam.mx
@@ -179,7 +178,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		case ARGP_KEY_INIT:	/**< Initialize variables from the command line*/
 			a->argz = 0;
 			a->argz_len = 0;
-			a->ip_ver=4;
+			a->ip_ver=IPPROTO_IPIP;
 			a->protocol=IPPROTO_ICMP;
 			a->saddr=0;
 			a->daddr=0;
@@ -378,10 +377,10 @@ int main(int argc, char **argv){
 		ip->daddr	= a.daddr;
 		ip->ihl		= 5;
 		ip->tos		= 0;
-		ip->frag_off= 0;
+		ip->frag_off	= 0;
 		ip->ttl		= 255;
 		ip->id		= rand ();
-		ip->protocol= a.protocol;
+		ip->protocol	= a.protocol;
 		ip->tot_len	= htons (packet_size);
 	}
 	else{
@@ -400,7 +399,7 @@ int main(int argc, char **argv){
 		udp->len	= htons(8 + payload_size);
 		udp->check	= 0;
 		udp->check	= in_cksum((unsigned short *)udp, sizeof(struct udphdr) + payload_size);
-		data			= (packet + header_length + sizeof(struct udphdr));
+		data		= (packet + header_length + sizeof(struct udphdr));
 	}
 	else if(a.protocol == IPPROTO_TCP){
 		tcp->source	= htons(a.sport);
@@ -415,8 +414,8 @@ int main(int argc, char **argv){
 		tcp->doff 	= 5;	
 		tcp->check	= 0;
 		tcp->window	= htons (5840);
-		tcp->urg_ptr= 0;
-		tcp->ack_seq= 0;
+		tcp->urg_ptr	= 0;
+		tcp->ack_seq	= 0;
 		tcp->check	= in_cksum((unsigned short *)tcp, sizeof(struct tcphdr) + payload_size);
 		data		= (packet + header_length + sizeof(struct tcphdr));
 	}
@@ -431,7 +430,7 @@ int main(int argc, char **argv){
 		icmp->code	= 0;
 		icmp->checksum	= 0;
 		icmp->checksum	= in_cksum((unsigned short *)icmp, sizeof(struct icmphdr) + payload_size);
-		icmp->un.echo.id= rand();
+		icmp->un.echo.id= 0;
 		icmp->un.echo.sequence = 0;
 		data		= (packet + header_length + sizeof(struct icmphdr));
 	}

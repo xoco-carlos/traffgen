@@ -94,11 +94,13 @@ struct arguments{
 	struct in6_addr daddr6;		/**< Struct for destination inet address IPv6*/
 	char *sa,*da;				
 	int delay;			/**< Delay */
+	int typeicmp;			/**< Type ICMP*/
+	int codeicmp;			/**< Code ICMP*/
 };
 /**
  * @brief Function to validate arguments
  *
- * The arguments are validated for each of the options on the command line.
+ * The arguments are validated for each option on the command line.
  */
 static int parse_opt (int key, char *arg, struct argp_state *state){
 	struct arguments *a = state->input;
@@ -114,6 +116,12 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		case 3333:		/**< TCP Protocol*/
 			a->protocol=IPPROTO_TCP;
 			a->proto++;
+		break;
+		case 4444:		/**< Type icmp*/
+			a->typeicmp=(unsigned int)atoi(arg);
+		break;
+		case 5555:		/**< Code icmp*/
+			a->codeicmp=(unsigned int)atoi(arg);
 		break;
 		case 1000:		/**< Send fast packets*/
 			a->fast++;
@@ -201,6 +209,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 			a->port=0;
 			a->tcpf=0;
 			a->delay=1000000;
+			a->typeicmp=8;
+			a->codeicmp=0;
 		break;
 		case ARGP_KEY_END:{
 			size_t count = argz_count (a->argz, a->argz_len);
@@ -290,7 +300,7 @@ int main(int argc, char **argv){
 	
 	if (argp_parse (&argp, argc, argv, 0, 0, &a) == 0){
 		if(a.verbose)
-			printf("IP version:\t%i\nProtocol:\t%i\nDestination IP:\t%s\nSource IP:\t%s\nPayload:\t%s\nSYN:\t%i\nACK:\t%i\nFIN:\t%i\nPSH:\t%i\nRST:\t%i\nURG:\t%i\nVerbose:\t%i\nFast:\t%i\nFlood:\t%i\nSport:\t%i\nDport:\t%i\nCount:%i\n",
+			printf("IP version:\t%i\nProtocol:\t%i\nDestination IP:\t%s\nSource IP:\t%s\nPayload:\t%s\nSYN:\t%i\nACK:\t%i\nFIN:\t%i\nPSH:\t%i\nRST:\t%i\nURG:\t%i\nVerbose:\t%i\nFast:\t%i\nFlood:\t%i\nSport:\t%i\nDport:\t%i\nCount:%i\nICMP Type:%i\nICMP Code:%i\n",
 			a.ip_ver,
 			a.protocol,
 			a.da,
@@ -307,7 +317,9 @@ int main(int argc, char **argv){
 			a.flood,
 			a.sport,
 			a.dport,
-			a.count
+			a.count,
+			a.typeicmp,
+			a.codeicmp
 		);
 	}
 
@@ -368,7 +380,6 @@ int main(int argc, char **argv){
 	else
 		icmp = (struct icmphdr *) (packet + header_length);
 	
-	//zero out the packet buffer
 	memset (packet, 0, packet_size);
 
 	if(a.ip_ver==IPPROTO_IPIP){
@@ -435,7 +446,6 @@ int main(int argc, char **argv){
 		data		= (packet + header_length + sizeof(struct icmphdr));
 	}
 	strcpy(data,a.payload);
-	//memset(&servaddr.sin_zero, 0, sizeof (servaddr.sin_zero));
 	while (a.count > 0 || a.count == -1){
 		if(a.ip_ver==IPPROTO_IPIP){
 			if ((sent_size = sendto(sockfd, packet, packet_size, 0, (struct sockaddr*) &servaddr, sizeof (servaddr))) < 1){
@@ -453,7 +463,7 @@ int main(int argc, char **argv){
 		a.count--;
 		printf("%d packets sent\r", sent);
 		fflush(stdout);
-		usleep(a.delay);	//microseconds
+		usleep(a.delay);	
 	}
 	free(packet);
 	close(sockfd);

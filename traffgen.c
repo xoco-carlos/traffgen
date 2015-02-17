@@ -3,7 +3,7 @@
  * @author Tovar Balderas Sergio Anduin 
  * @author Zamora Parra Xocoyotzin Carlos 
  * @date 17 Octubre 2014
- * @brief Network traffic generator for stress testing
+ * @brief Network traffic generator for IPv4 & IPv6
  *
  * @see www.seguridad.unam.mx
  * @see tic.unam.mx
@@ -48,6 +48,10 @@ struct argp_option options[] ={
 	{"icmp"	,1111,0,0,"ICMP Packet"},
 	{"udp"	,2222,0,0,"UDP Packet"},
 	{"tcp"	,3333,0,0,"TCP Packet"},
+
+	{0,0,0,0, "ICMP Type and Code fields:\n",6},
+	{"type"	,4444	,"NUM"	,0,"Type ICMP"},
+	{"code"	,5555	,"NUM"	,0,"Code ICMP"},
 	
 	{0,0,0,0, "The following options could be grouped together after --tcp flag:\n",3},
 	{0,'S',0,0,"Set SYNCHRONIZATION Flag"},
@@ -85,7 +89,7 @@ struct arguments{
 	unsigned long saddr;		/**< Source ip*/
 	char *payload;			/**< Payload packet*/
 	size_t argz_len;		/**< # of args*/
-	int syn,ack,fin,psh,rst,urg;/**< TCP Flags*/
+	int syn,ack,fin,psh,rst,urg;	/**< TCP Flags*/
 	int verbose,fast,flood;		/**< Boolean options*/
 	unsigned int sport,dport;	/**< Port number*/
 	unsigned int count;		/**< Number of packets to send*/
@@ -100,7 +104,7 @@ struct arguments{
 /**
  * @brief Function to validate arguments
  *
- * The arguments are validated for each option on the command line.
+ * The arguments are validated for each of the options on the command line.
  */
 static int parse_opt (int key, char *arg, struct argp_state *state){
 	struct arguments *a = state->input;
@@ -119,9 +123,11 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		break;
 		case 4444:		/**< Type icmp*/
 			a->typeicmp=(unsigned int)atoi(arg);
+			//a->proto++;
 		break;
 		case 5555:		/**< Code icmp*/
 			a->codeicmp=(unsigned int)atoi(arg);
+			//a->proto++;
 		break;
 		case 1000:		/**< Send fast packets*/
 			a->fast++;
@@ -186,7 +192,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		case ARGP_KEY_INIT:	/**< Initialize variables from the command line*/
 			a->argz = 0;
 			a->argz_len = 0;
-			a->ip_ver=IPPROTO_IPIP;
+			a->ip_ver=4;
 			a->protocol=IPPROTO_ICMP;
 			a->saddr=0;
 			a->daddr=0;
@@ -214,7 +220,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		break;
 		case ARGP_KEY_END:{
 			size_t count = argz_count (a->argz, a->argz_len);
-			if (count > 1){			/**< Check only one argument*/
+			if (count > 1){				/**< Check only one argument*/
 				argp_usage(state);
 				argp_failure (state, 1, 0, "too many arguments");
 			}
@@ -244,6 +250,10 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 				argp_failure (state, 1, 0, "You can not specify a port for IPPROTO_ICMP");
 			if(a->protocol==IPPROTO_ICMP && (a->tcpf)>0)	/**< IPPROTO_ICMP with tcp flags*/
 				argp_failure (state, 1, 0, "You can not specify a tcp flags for IPPROTO_ICMP");
+			if(a->protocol==IPPROTO_ICMP && (a->typeicmp)<0)	/**< IPPROTO_ICMP with negative type*/
+				argp_failure (state, 1, 0, "You can not specify a negative type for IPPROTO_ICMP");
+			if(a->protocol==IPPROTO_ICMP && (a->codeicmp)<0)	/**< IPPROTO_ICMP with negative code*/
+				argp_failure (state, 1, 0, "You can not specify a negative code for IPPROTO_ICMP");
 			if(a->protocol==IPPROTO_UDP && (a->tcpf)>0)	/**< IPPROTO_UDP with tcp flags*/
 				argp_failure (state, 1, 0, "You can not specify a tcp flags for IPPROTO_UDP");
 			if(a->dport==-1 && (a->protocol==IPPROTO_UDP || a->protocol==IPPROTO_TCP))	/**< IPPROTO_UDP or IPPROTO_TCP without destination port*/
@@ -300,7 +310,7 @@ int main(int argc, char **argv){
 	
 	if (argp_parse (&argp, argc, argv, 0, 0, &a) == 0){
 		if(a.verbose)
-			printf("IP version:\t%i\nProtocol:\t%i\nDestination IP:\t%s\nSource IP:\t%s\nPayload:\t%s\nSYN:\t%i\nACK:\t%i\nFIN:\t%i\nPSH:\t%i\nRST:\t%i\nURG:\t%i\nVerbose:\t%i\nFast:\t%i\nFlood:\t%i\nSport:\t%i\nDport:\t%i\nCount:%i\nICMP Type:%i\nICMP Code:%i\n",
+			printf("IP version:\t%i\nProtocol:\t%i\nDestination IP:\t%s\nSource IP:\t%s\nPayload:\t%s\nSYN:\t%i\nACK:\t%i\nFIN:\t%i\nPSH:\t%i\nRST:\t%i\nURG:\t%i\nVerbose:\t%i\nFast:\t%i\nFlood:\t%i\nSport:\t%i\nDport:\t%i\nCount:%i\n",
 			a.ip_ver,
 			a.protocol,
 			a.da,
@@ -317,9 +327,9 @@ int main(int argc, char **argv){
 			a.flood,
 			a.sport,
 			a.dport,
-			a.count,
 			a.typeicmp,
-			a.codeicmp
+			a.codeicmp,
+			a.count
 		);
 	}
 
@@ -334,11 +344,11 @@ int main(int argc, char **argv){
 	}
 	else{
 		servaddr6.sin6_family	= AF_INET6;
-		servaddr6.sin6_addr	= a.daddr6;
-		servaddr6.sin6_port	= 0;
+		servaddr6.sin6_addr		= a.daddr6;
+		servaddr6.sin6_port		= 0;
 		servaddr6.sin6_flowinfo	= 0;
 		servaddr6.sin6_scope_id	= 0;
-		header_length		= sizeof(struct ip6_hdr);
+		header_length			= sizeof(struct ip6_hdr);
 		sockfd = socket (AF_INET6, SOCK_RAW, IPPROTO_RAW);
 	}
 	/*Socket error*/
@@ -388,10 +398,10 @@ int main(int argc, char **argv){
 		ip->daddr	= a.daddr;
 		ip->ihl		= 5;
 		ip->tos		= 0;
-		ip->frag_off	= 0;
+		ip->frag_off= 0;
 		ip->ttl		= 255;
 		ip->id		= rand ();
-		ip->protocol	= a.protocol;
+		ip->protocol= a.protocol;
 		ip->tot_len	= htons (packet_size);
 	}
 	else{
@@ -410,7 +420,7 @@ int main(int argc, char **argv){
 		udp->len	= htons(8 + payload_size);
 		udp->check	= 0;
 		udp->check	= in_cksum((unsigned short *)udp, sizeof(struct udphdr) + payload_size);
-		data		= (packet + header_length + sizeof(struct udphdr));
+		data			= (packet + header_length + sizeof(struct udphdr));
 	}
 	else if(a.protocol == IPPROTO_TCP){
 		tcp->source	= htons(a.sport);
@@ -425,23 +435,23 @@ int main(int argc, char **argv){
 		tcp->doff 	= 5;	
 		tcp->check	= 0;
 		tcp->window	= htons (5840);
-		tcp->urg_ptr	= 0;
-		tcp->ack_seq	= 0;
+		tcp->urg_ptr= 0;
+		tcp->ack_seq= 0;
 		tcp->check	= in_cksum((unsigned short *)tcp, sizeof(struct tcphdr) + payload_size);
 		data		= (packet + header_length + sizeof(struct tcphdr));
 	}
 	else if(a.protocol == IPPROTO_ICMPV6){
-		icmp6->icmp6_type	= ICMP6_ECHO_REQUEST;
-		icmp6->icmp6_code	= 0;
+		icmp6->icmp6_type	= a.typeicmp;
+		icmp6->icmp6_code	= a.codeicmp;
 		icmp6->icmp6_cksum	= in_cksum((unsigned short *)icmp6, sizeof(struct icmp6_hdr) + payload_size);
 		data			= (packet + header_length + sizeof(struct icmp6_hdr));
 	}
 	else{
-		icmp->type	= ICMP_ECHO;
-		icmp->code	= 0;
+		icmp->type	= a.typeicmp;
+		icmp->code	= a.codeicmp;
 		icmp->checksum	= 0;
 		icmp->checksum	= in_cksum((unsigned short *)icmp, sizeof(struct icmphdr) + payload_size);
-		icmp->un.echo.id= 0;
+		icmp->un.echo.id= rand();
 		icmp->un.echo.sequence = 0;
 		data		= (packet + header_length + sizeof(struct icmphdr));
 	}
@@ -459,11 +469,11 @@ int main(int argc, char **argv){
 				break;
 			}
 		}
-		/*icmp->un.echo.sequence = ++sent;*/++sent;
+		++sent;
 		a.count--;
 		printf("%d packets sent\r", sent);
 		fflush(stdout);
-		usleep(a.delay);	
+		usleep(a.delay);	//microseconds
 	}
 	free(packet);
 	close(sockfd);

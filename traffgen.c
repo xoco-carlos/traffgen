@@ -123,11 +123,9 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 		break;
 		case 4444:		/**< Type icmp*/
 			a->typeicmp=(unsigned int)atoi(arg);
-			//a->proto++;
 		break;
 		case 5555:		/**< Code icmp*/
 			a->codeicmp=(unsigned int)atoi(arg);
-			//a->proto++;
 		break;
 		case 1000:		/**< Send fast packets*/
 			a->fast++;
@@ -238,6 +236,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state){
 			if(a->ip_ver == IPPROTO_TCP){	/**< Check IPv6 address(es)*/
 				if(a->protocol==IPPROTO_ICMP)
 					a->protocol=IPPROTO_ICMPV6;
+				if(a->typeicmp == 8)
+					a->typeicmp=128;
 				if(a->sa != NULL)
 					if (inet_pton(AF_INET6, a->sa, &(a->saddr6)) != 1)
 						argp_failure (state, 1, 0, "Bad source IP address, try again");
@@ -431,12 +431,12 @@ int main(int argc, char **argv){
 		tcp->psh	= a.psh;
 		tcp->ack	= a.ack;
 		tcp->urg	= a.urg;
-		tcp->seq 	= 0;
+		tcp->seq 	= rand();
 		tcp->doff 	= 5;	
 		tcp->check	= 0;
 		tcp->window	= htons (5840);
 		tcp->urg_ptr= 0;
-		tcp->ack_seq= 0;
+		tcp->ack_seq= rand();
 		tcp->check	= in_cksum((unsigned short *)tcp, sizeof(struct tcphdr) + payload_size);
 		data		= (packet + header_length + sizeof(struct tcphdr));
 	}
@@ -452,7 +452,7 @@ int main(int argc, char **argv){
 		icmp->checksum	= 0;
 		icmp->checksum	= in_cksum((unsigned short *)icmp, sizeof(struct icmphdr) + payload_size);
 		icmp->un.echo.id= rand();
-		icmp->un.echo.sequence = 0;
+		icmp->un.echo.sequence = rand();
 		data		= (packet + header_length + sizeof(struct icmphdr));
 	}
 	strcpy(data,a.payload);
@@ -490,8 +490,6 @@ int main(int argc, char **argv){
  * @param *ptr 		Pointer to calculate the checksum.
  * @param nbytes 	Number of bytes of the packet.
  * @return Returns the checksum of packet.
- * @note Nota.
- * @warning Advertencia.
  */
 unsigned short in_cksum(unsigned short *ptr, int nbytes)
 {
